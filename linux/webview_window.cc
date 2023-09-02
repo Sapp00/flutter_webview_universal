@@ -8,7 +8,15 @@
 
 #include "message_channel_plugin.h"
 
-// https://github.com/vadz/wxWidgets/blob/master/include/wx/defs.h
+// https://github.com/vadz/wxWidgets/
+#define wxSTRINGIZE_HELPER(x)       #x
+#define wxSTRINGIZE(x)              wxSTRINGIZE_HELPER(x)
+
+#define wxCONCAT_HELPER(text, line) text ## line
+
+#define wxCONCAT(x1, x2) \
+    wxCONCAT_HELPER(x1, x2)
+
 #if defined(__clang__) || defined(__GNUC__)
 #   define wxGCC_WARNING_SUPPRESS(x) \
         _Pragma (wxSTRINGIZE(GCC diagnostic push)) \
