@@ -8,6 +8,18 @@
 
 #include "message_channel_plugin.h"
 
+// https://github.com/vadz/wxWidgets/blob/master/include/wx/defs.h
+#if defined(__clang__) || defined(__GNUC__)
+#   define wxGCC_WARNING_SUPPRESS(x) \
+        _Pragma (wxSTRINGIZE(GCC diagnostic push)) \
+        _Pragma (wxSTRINGIZE(GCC diagnostic ignored wxSTRINGIZE(wxCONCAT(-W,x))))
+#   define wxGCC_WARNING_RESTORE(x) \
+       _Pragma (wxSTRINGIZE(GCC diagnostic pop))
+#else /* gcc < 4.6 or not gcc and not clang at all */
+#   define wxGCC_WARNING_SUPPRESS(x)
+#   define wxGCC_WARNING_RESTORE(x)
+#endif
+
 namespace {
 
 gboolean on_load_failed_with_tls_errors(
@@ -216,12 +228,13 @@ gboolean WebviewWindow::DecidePolicy(WebKitPolicyDecision *decision, WebKitPolic
 }
 
 void WebviewWindow::EvaluateJavaScript(const char *java_script, FlMethodCall *call) {
-  webkit_web_view_evaluate_javascript(
+  wxGCC_WARNING_SUPPRESS(deprecated-declarations)
+  webkit_web_view_run_javascript(
       WEBKIT_WEB_VIEW(webview_), java_script, nullptr,
       [](GObject *object, GAsyncResult *result, gpointer user_data) {
         auto *call = static_cast<FlMethodCall *>(user_data);
         GError *error = nullptr;
-        auto *js_result = webkit_web_view_evaluate_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
+        auto *js_result = webkit_web_view_run_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
         if (!js_result) {
           fl_method_call_respond_error(call, "failed to evaluate javascript.", error->message, nullptr, nullptr);
           g_error_free(error);
@@ -232,4 +245,5 @@ void WebviewWindow::EvaluateJavaScript(const char *java_script, FlMethodCall *ca
         g_object_unref(call);
       },
       g_object_ref(call));
+    wxGCC_WARNING_RESTORE(deprecated-declarations)
 }
